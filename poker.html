@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Кэш-Тыкалка</title>
+    <title>Кэш-Тыкалка 2.0</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
         body { background: #0d1117; color: #c9d1d9; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
@@ -36,7 +36,7 @@
 </head>
 <body>
 <div id="app">
-    <h1>♠️ Кэш-Тыкалка</h1>
+    <h1>♠️ Кэш-Тыкалка 2.0</h1>
 
     <div class="section">
         <div class="section-title">🃏 Мои карты (выбери 2)</div>
@@ -45,7 +45,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">📌 Доска (выбери 3)</div>
+        <div class="section-title">📌 Доска</div>
         <div id="board-grid" class="card-grid"></div>
         <div id="board-display" class="display-box">—</div>
         <div class="flex-row">
@@ -73,16 +73,19 @@
     let boardCards = [];
     let boardSize = 3;
 
-    function createGrid(containerId, maxSelect, displayId, storeArr) {
+    function buildGrid(containerId, maxSelect, displayId, storeArr) {
         const grid = document.getElementById(containerId);
+        grid.innerHTML = '';
         const display = document.getElementById(displayId);
+        
         RANKS.forEach(r => {
             SUITS.forEach(s => {
                 const btn = document.createElement('div');
                 btn.className = `card-btn suit-${s}`;
                 btn.innerText = r + s;
+                btn.dataset.card = r + s;
                 btn.onclick = function() {
-                    const card = r + s;
+                    const card = this.dataset.card;
                     if (this.classList.contains('selected')) {
                         this.classList.remove('selected');
                         const idx = storeArr.indexOf(card);
@@ -104,8 +107,8 @@
     function setBoardSize(n) {
         boardSize = n;
         boardCards = [];
-        document.querySelectorAll('#board-grid .selected').forEach(b => b.classList.remove('selected'));
         document.getElementById('board-display').innerText = '—';
+        buildGrid('board-grid', boardSize, 'board-display', boardCards);
         updateResult();
     }
 
@@ -121,7 +124,6 @@
             return;
         }
 
-        // Математическое ядро (расчёт эквити и аутов)
         let outs = 0;
         let handRanks = myCards.map(c => c.slice(0, -1));
         let boardRanks = boardCards.map(c => c.slice(0, -1));
@@ -129,7 +131,6 @@
         let boardSuits = boardCards.map(c => c.slice(-1));
         let allSuits = handSuits.concat(boardSuits);
 
-        // Флеш-дро
         let suitCount = {};
         allSuits.forEach(s => suitCount[s] = (suitCount[s] || 0) + 1);
         for (let s in suitCount) {
@@ -139,7 +140,6 @@
             }
         }
 
-        // Стрит-дро (упрощённо: ищем близкие ранги)
         let allRanks = handRanks.concat(boardRanks);
         let rankValues = allRanks.map(r => {
             if (r === 'J') return 11;
@@ -156,7 +156,6 @@
             }
         }
 
-        // Расчёт эквити (на основе аутов)
         let equity = 0;
         if (outs > 0) {
             let multiplier = (boardCards.length === 3) ? 4 : 2;
@@ -168,7 +167,6 @@
             equity = common.length > 0 ? 55 : 25;
         }
 
-        // Вывод результата
         equityEl.innerText = equity + '%';
         outsEl.innerText = outs;
 
@@ -181,21 +179,24 @@
             actionEl.innerText = '🟢 КОЛЛ (по шансам)';
         } else {
             actionEl.className = 'action action-fold';
-            actionEl.innerText = '🔴 ФОЛД (не хватает)';
+            actionEl.innerText = '🔴 ФОЛД';
         }
     }
 
     function clearAll() {
         myCards = [];
         boardCards = [];
-        document.querySelectorAll('.selected').forEach(b => b.classList.remove('selected'));
+        boardSize = 3;
         document.getElementById('my-display').innerText = '—';
         document.getElementById('board-display').innerText = '—';
+        buildGrid('my-grid', 2, 'my-display', myCards);
+        buildGrid('board-grid', 3, 'board-display', boardCards);
         updateResult();
     }
 
-    createGrid('my-grid', 2, 'my-display', myCards);
-    createGrid('board-grid', 3, 'board-display', boardCards);
+    // Первоначальная загрузка
+    buildGrid('my-grid', 2, 'my-display', myCards);
+    buildGrid('board-grid', 3, 'board-display', boardCards);
 </script>
 </body>
 </html>
